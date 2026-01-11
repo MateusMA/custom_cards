@@ -19,7 +19,7 @@ function s.initial_effect(c)
     local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
     e3:SetCountLimit(1,id+100)
     e3:SetTarget(s.settg)
@@ -38,6 +38,15 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
+	--Cannot summon monsters except Godragons
+	local e666=Effect.CreateEffect(c)
+	e666:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e666:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e666:SetOperation(s.spop3)
+	c:RegisterEffect(e666)
+	local e667=e666:Clone()
+	e667:SetCode(EVENT_SUMMON_SUCCESS)
+	c:RegisterEffect(e667)
 end
 
 --extra summon
@@ -59,16 +68,16 @@ function s.setfilter(c)
 	return c:IsType(TYPE_TRAP) and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.IsExistingTarget(s.setfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-	local g=Duel.SelectTarget(tp,s.setfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,g,1,0,0)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil)
+    and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
+    Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,LOCATION_GRAVE,LOCATION_GRAVE)
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
-		Duel.SSet(tp,tc)
-	end
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
+	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil)
+	local tc=g:GetFirst()
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	Duel.SSet(tp,tc)
 end
 
 --spsummon a monster from GY
@@ -76,9 +85,9 @@ function s.spfilterGY(c,e,tp)
 	return c:IsCode(300003) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-        if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		    and Duel.IsExistingMatchingCard(s.spfilterGY,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
-	    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingMatchingCard(s.spfilterGY,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
@@ -92,4 +101,19 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e1,true)
 	end
 	Duel.SpecialSummonComplete()
+end
+
+--Cannot summon monsters except Godragons
+function s.spop3(e,tp,eg,ep,ev,re,r,rp,c)
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	Duel.RegisterEffect(e1,tp)
+end
+function s.splimit(e,c)
+	return c:IsLocation(LOCATION_EXTRA) and not c:IsSetCard(0xbdc)
 end

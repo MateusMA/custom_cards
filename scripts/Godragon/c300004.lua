@@ -1,4 +1,4 @@
---Red Sun - Calibur
+--Godragon Sun Calibur
 local s,id,o=GetID()
 function s.initial_effect(c)
 	--link summon

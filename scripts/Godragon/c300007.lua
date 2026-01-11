@@ -35,6 +35,15 @@ function s.initial_effect(c)
     local e4=e3:Clone()
 	e4:SetCode(EVENT_SUMMON_SUCCESS)
 	c:RegisterEffect(e4)
+	--Cannot summon monsters except Godragons
+	local e666=Effect.CreateEffect(c)
+	e666:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e666:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e666:SetOperation(s.spop3)
+	c:RegisterEffect(e666)
+	local e667=e666:Clone()
+	e667:SetCode(EVENT_SUMMON_SUCCESS)
+	c:RegisterEffect(e667)
 end
 
 --Normal Summon
@@ -73,4 +82,19 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
+end
+
+--Cannot summon monsters except Godragons
+function s.spop3(e,tp,eg,ep,ev,re,r,rp,c)
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.splimit)
+	Duel.RegisterEffect(e1,tp)
+end
+function s.splimit(e,c)
+	return c:IsLocation(LOCATION_EXTRA) and not c:IsSetCard(0xbdc)
 end

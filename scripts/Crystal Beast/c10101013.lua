@@ -1,4 +1,4 @@
---Crystal Beast Emerald Turtle
+--Crystal Beast Emerald Guardian
 local s,id,o=GetID()
 function s.initial_effect(c)
     --special summon
@@ -16,7 +16,6 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_TO_GRAVE_REDIRECT_CB)
 	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-    e2:SetCountLimit(1,id+100)
 	e2:SetCondition(s.repcon)
 	e2:SetOperation(s.repop)
 	c:RegisterEffect(e2)
